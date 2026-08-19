@@ -122,7 +122,8 @@ const Watch = () => {
       .then(r => r.json())
       .then(res => {
         if (ctrl.signal.aborted) return;
-        const stream = res.data?.[0]?.stream?.filter(s => s.link) || [];
+        const stream = (res.data?.[0]?.stream?.filter(s => s.link) || [])
+        .map(s => ({ ...s, link: s.link.replace(/&amp;/g, '&') }));
         setServers(stream);
         if (stream.length > 0) setSelectedServer(stream[0]);
       })
