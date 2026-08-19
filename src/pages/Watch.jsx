@@ -201,7 +201,7 @@ const Watch = () => {
                 className="w-full h-full border-0"
                 allowFullScreen
                 allow="autoplay; fullscreen; picture-in-picture"
-                referrerPolicy="no-referrer"
+                referrerPolicy="origin"
               />
             ) : (
               <div className="absolute inset-0 flex flex-col items-center justify-center bg-black z-20 text-white/40">
