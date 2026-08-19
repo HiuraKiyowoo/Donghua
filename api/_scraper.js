@@ -1,9 +1,9 @@
-// Shared scraper utilities untuk semua API routes
+// api/_scraper.js - Pure ESM untuk Vercel
 
 const BASE = 'https://donghub.vip';
 const UA = 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36';
 
-async function fetchPage(url) {
+export async function fetchPage(url) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 20000);
   try {
@@ -34,7 +34,7 @@ function getAttr(tag, name) {
   const m = new RegExp(`\\b${name}\\s*=\\s*["']([^"']+)["']`, 'i').exec(tag || '');
   return m ? m[1].trim() : null;
 }
-function absUrl(v) {
+export function absUrl(v) {
   if (!v) return null;
   v = v.trim();
   if (v.startsWith('http')) return v;
@@ -42,14 +42,13 @@ function absUrl(v) {
   if (v.startsWith('/')) return BASE + v;
   return null;
 }
-function isEpisodeUrl(url) {
+export function isEpisodeUrl(url) {
   return /episode[-–]\d+/i.test(url) || /\-ep[-–]?\d+/i.test(url);
 }
-function seriesUrlFromEpisode(url) {
+export function seriesUrlFromEpisode(url) {
   return url.replace(/-episode-\d+[-\w]*/i, '').replace(/\/+$/, '/');
 }
-
-function parseCard(fragment) {
+export function parseCard(fragment) {
   const hrefMatch = /href\s*=\s*["']([^"']+)["']/i.exec(fragment);
   const url = absUrl(hrefMatch?.[1]);
   const imgMatch = /<img\b([^>]+)>/i.exec(fragment);
@@ -62,8 +61,7 @@ function parseCard(fragment) {
   if (!url || !title) return null;
   return { url, image, title, episode, type };
 }
-
-function parseCards(html) {
+export function parseCards(html) {
   const seen = new Set();
   const cards = [];
   for (const m of String(html || '').matchAll(/<article\b[\s\S]*?<\/article>/gi)) {
@@ -72,8 +70,7 @@ function parseCards(html) {
   }
   return cards;
 }
-
-function parseEpisodeList(html) {
+export function parseEpisodeList(html) {
   const list = [];
   for (const m of String(html || '').matchAll(/<li\b[^>]*>([\s\S]*?)<\/li>/gi)) {
     const frag = m[1];
@@ -81,9 +78,8 @@ function parseEpisodeList(html) {
     const href = absUrl(/href\s*=\s*["']([^"']+)["']/i.exec(frag)?.[1]);
     const numText = stripHtml(/class="[^"]*epl-num[^"]*"[^>]*>([\s\S]*?)<\//i.exec(frag)?.[1]);
     const titleText = stripHtml(/class="[^"]*epl-title[^"]*"[^>]*>([\s\S]*?)<\//i.exec(frag)?.[1]);
-    const date = stripHtml(/class="[^"]*epl-date[^"]*"[^>]*>([\s\S]*?)<\//i.exec(frag)?.[1]);
     if (!href) continue;
-    list.push({ url: href, number: parseFloat(numText) || null, label: numText || titleText, title: titleText || numText, date });
+    list.push({ url: href, number: parseFloat(numText) || null, label: numText || titleText, title: titleText || numText });
   }
   if (list.length > 0) return list;
   const epSection = /class="[^"]*eplister[^"]*"[^>]*>([\s\S]*?)<\/ul>/i.exec(html)?.[1] || '';
@@ -96,8 +92,7 @@ function parseEpisodeList(html) {
   }
   return list;
 }
-
-function parseServers(html) {
+export function parseServers(html) {
   const servers = [];
   const src = String(html || '');
   const selectMatch = /<select\b[^>]*class="[^"]*mirror[^"]*"[^>]*>([\s\S]*?)<\/select>/i.exec(src);
@@ -132,15 +127,11 @@ function parseServers(html) {
   }
   return servers;
 }
-
-function parseSeriesDetail(html, url) {
+export function parseSeriesDetail(html, url) {
   const src = String(html || '');
   const title = stripHtml(/<h1\b[^>]*class="[^"]*entry-title[^"]*"[^>]*>([\s\S]*?)<\/h1>/i.exec(src)?.[1] || /<h1\b[^>]*>([\s\S]*?)<\/h1>/i.exec(src)?.[1]);
   let image = null;
-  for (const re of [
-    /class="[^"]*(?:thumb|poster|bigcover)[^"]*"[^>]*>[\s\S]{0,200}?<img\b([^>]+)>/i,
-    /<img\b([^>]+)>/i,
-  ]) {
+  for (const re of [/class="[^"]*(?:thumb|poster|bigcover)[^"]*"[^>]*>[\s\S]{0,200}?<img\b([^>]+)>/i, /<img\b([^>]+)>/i]) {
     const imgTag = re.exec(src)?.[1];
     if (!imgTag) continue;
     image = absUrl(getAttr(imgTag, 'src') || getAttr(imgTag, 'data-src') || getAttr(imgTag, 'data-lazy-src'));
@@ -161,5 +152,4 @@ function parseSeriesDetail(html, url) {
   const episodes = parseEpisodeList(src);
   return { url, title, image, description: desc, status: meta.status || null, type: meta.type || null, studio: meta.studio || null, released: meta.released || null, genres, episodes };
 }
-
-module.exports = { fetchPage, parseCards, parseServers, parseSeriesDetail, isEpisodeUrl, seriesUrlFromEpisode, BASE };
+export { BASE };
