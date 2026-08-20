@@ -19,9 +19,8 @@ const encodeUrl = (url) => encodeURIComponent(url);
 
 const Home = () => {
   const navigate = useNavigate();
-  const [ongoing, setOngoing] = useState([]);
-  const [popular, setPopular] = useState([]);
-  const [popularToday, setPopularToday] = useState([]);
+  const [latestRelease, setLatestRelease] = useState([]); // grid besar, "Latest Release"
+  const [popularToday, setPopularToday] = useState([]);   // horizontal, "Popular Today"
   const [recommendation, setRecommendation] = useState([]);
   const [activeGenre, setActiveGenre] = useState(0);
   const [populerRanking, setPopulerRanking] = useState({});
@@ -37,8 +36,7 @@ const Home = () => {
       setIsLoading(true);
       try {
         const res = await fetch('/api/home').then(r => r.json());
-        setOngoing(res.latest || []);
-        setPopular(res.popular || []);
+        setLatestRelease(res.latest || []);
         setPopularToday(res.popularToday || []);
         setRecommendation(res.recommendation || []);
         setPopulerRanking(res.populerRanking || {});
@@ -52,20 +50,20 @@ const Home = () => {
     fetchData();
   }, []);
 
-  // Hero auto-rotate
+  // Hero auto-rotate — pakai Latest Release
   useEffect(() => {
-    if (popular.length === 0) return;
+    if (latestRelease.length === 0) return;
     const timer = setInterval(() => {
       setIsTransitioning(false);
       setTimeout(() => {
-        setHeroIndex(prev => (prev + 1) % Math.min(popular.length, 7));
+        setHeroIndex(prev => (prev + 1) % Math.min(latestRelease.length, 7));
         setIsTransitioning(true);
       }, 300);
     }, 5000);
     return () => clearInterval(timer);
-  }, [popular]);
+  }, [latestRelease]);
 
-  const hero = popular[heroIndex];
+  const hero = latestRelease[heroIndex];
 
   const goToAnime = (url) => {
     navigate(`/anime/${encodeUrl(url)}`);
@@ -110,9 +108,9 @@ const Home = () => {
         ) : null}
 
         {/* Hero dots */}
-        {popular.length > 1 && (
+        {latestRelease.length > 1 && (
           <div className="absolute bottom-4 right-6 flex gap-1.5 z-10">
-            {popular.slice(0, 7).map((_, i) => (
+            {latestRelease.slice(0, 7).map((_, i) => (
               <div key={i} onClick={() => setHeroIndex(i)}
                 className={`h-1 rounded-full cursor-pointer transition-all ${i === heroIndex ? 'w-6 bg-[#F6CF80]' : 'w-1.5 bg-white/30'}`} />
             ))}
@@ -121,67 +119,6 @@ const Home = () => {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 md:px-6 pt-6">
-
-        {/* ── Ongoing / Latest ── */}
-        <section className="mb-10">
-          <div className="flex items-center justify-between mb-5">
-            <h2 className="text-white font-black uppercase text-sm md:text-base tracking-tight">Update Terbaru</h2>
-            <button onClick={() => navigate('/ongoing')} className="text-[#F6CF80] text-[10px] font-black uppercase tracking-widest hover:underline">Lihat Semua</button>
-          </div>
-          <div className="flex gap-3 overflow-x-auto no-scrollbar pb-2" style={{flexWrap:'nowrap'}}>
-            {isLoading
-              ? [...Array(8)].map((_, i) => (
-                  <div key={i} className="flex-none" style={{width:'105px'}}><CardSkeleton /></div>
-                ))
-              : ongoing.map((a, i) => (
-                <div key={i} onClick={() => goToAnime(a.url)}
-                  className="flex-none flex flex-col gap-2 group cursor-pointer active:scale-95 transition-transform"
-                  style={{width:'105px'}}>
-                  <div className="relative bg-[#16161a] rounded-sm shadow-xl overflow-hidden" style={{aspectRatio:'3/4.5'}}>
-                    <img src={a.image} referrerPolicy="no-referrer" alt={a.title}
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
-                    {a.episode && (
-                      <div className="absolute bottom-0 left-0 right-0 bg-black/70 py-1 px-2">
-                        <span className="text-[#F6CF80] text-[9px] font-black">{a.episode}</span>
-                      </div>
-                    )}
-                  </div>
-                  <h3 className="text-[9px] font-bold text-white/60 line-clamp-1 group-hover:text-[#F6CF80] transition-colors">
-                    {a.title?.toLowerCase()}
-                  </h3>
-                </div>
-              ))}
-          </div>
-        </section>
-
-        {/* ── Popular ── */}
-        <section className="mb-10">
-          <div className="flex items-center justify-between mb-5">
-            <h2 className="text-white font-black uppercase text-sm md:text-base tracking-tight">Populer</h2>
-            <button onClick={() => navigate('/explore')} className="text-[#F6CF80] text-[10px] font-black uppercase tracking-widest hover:underline">Explore</button>
-          </div>
-          <div className="grid grid-cols-[repeat(auto-fill,minmax(95px,1fr))] gap-3">
-            {isLoading
-              ? [...Array(12)].map((_, i) => <CardSkeleton key={i} />)
-              : popular.slice(0, 12).map((a, i) => (
-                <div key={i} onClick={() => goToAnime(a.url)}
-                  className="flex flex-col gap-2 group cursor-pointer active:scale-95 transition-transform">
-                  <div className="relative aspect-[3/4.5] w-full overflow-hidden bg-[#16161a] rounded-sm shadow-xl">
-                    <img src={a.image} referrerPolicy="no-referrer" alt={a.title}
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
-                    {a.type && (
-                      <div className="absolute top-1 left-1">
-                        <span className="bg-[#F6CF80] text-black text-[7px] font-black px-1.5 py-0.5 rounded-sm uppercase">{a.type}</span>
-                      </div>
-                    )}
-                  </div>
-                  <h3 className="text-[9px] font-bold text-white/60 line-clamp-1 group-hover:text-[#F6CF80] transition-colors">
-                    {a.title?.toLowerCase()}
-                  </h3>
-                </div>
-              ))}
-          </div>
-        </section>
 
         {/* ── Popular Today ── */}
         {(isLoading || popularToday.length > 0) && (
@@ -218,6 +155,44 @@ const Home = () => {
             </div>
           </section>
         )}
+
+        {/* ── Latest Release ── */}
+        <section className="mb-10">
+          <div className="flex items-center justify-between mb-5">
+            <h2 className="text-white font-black uppercase text-sm md:text-base tracking-tight">Latest Release</h2>
+            <button onClick={() => navigate('/ongoing')} className="text-[#F6CF80] text-[10px] font-black uppercase tracking-widest hover:underline">Lihat Semua</button>
+          </div>
+          <div className="flex gap-3 overflow-x-auto no-scrollbar pb-2" style={{flexWrap:'nowrap'}}>
+            {isLoading
+              ? [...Array(8)].map((_, i) => (
+                  <div key={i} className="flex-none" style={{width:'105px'}}><CardSkeleton /></div>
+                ))
+              : latestRelease.slice(0, 24).map((a, i) => (
+                <div key={i} onClick={() => goToAnime(a.url)}
+                  className="flex-none flex flex-col gap-2 group cursor-pointer active:scale-95 transition-transform"
+                  style={{width:'105px'}}>
+                  <div className="relative aspect-[3/4.5] w-full overflow-hidden bg-[#16161a] rounded-sm shadow-xl">
+                    <img src={a.image} referrerPolicy="no-referrer" alt={a.title}
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                    {a.type && (
+                      <div className="absolute top-1 left-1">
+                        <span className="bg-[#F6CF80] text-black text-[7px] font-black px-1.5 py-0.5 rounded-sm uppercase">{a.type}</span>
+                      </div>
+                    )}
+                    {a.episode && (
+                      <div className="absolute bottom-0 left-0 right-0 bg-black/70 py-1 px-2">
+                        <span className="text-[#F6CF80] text-[9px] font-black">{a.episode}</span>
+                      </div>
+                    )}
+                  </div>
+                  <h3 className="text-[9px] font-bold text-white/60 line-clamp-1 group-hover:text-[#F6CF80] transition-colors">
+                    {a.title?.toLowerCase()}
+                  </h3>
+                </div>
+              ))}
+          </div>
+
+        </section>
 
         {/* ── Recommendation (tab genre) ── */}
         {(isLoading || recommendation.length > 0) && (
