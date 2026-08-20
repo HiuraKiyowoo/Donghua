@@ -56,9 +56,8 @@ const ScheduleCard = ({ a, onClick, index }) => {
           : 'opacity-0 blur-xl translate-y-8'
       }`}
     >
-      {/* Time placeholder - API tidak punya time */}
       <div className="w-12 md:w-16 shrink-0 flex items-start pt-4 justify-end font-black text-white/40 group-hover:text-[#F6CF80] transition-colors text-xs md:text-sm">
-        --
+        {a.time || '--'}
       </div>
       <div className="relative flex flex-col items-center justify-start pt-4 shrink-0 w-4">
         <div className="absolute top-4 bottom-0 w-px bg-white/10 group-hover:bg-[#F6CF80]/30 transition-colors"></div>
@@ -76,15 +75,19 @@ const ScheduleCard = ({ a, onClick, index }) => {
             className="w-20 md:w-24 aspect-[3/4] object-cover rounded-md shadow-2xl shrink-0 group-hover/card:scale-105 transition-transform duration-500 relative z-10"
           />
           <div className="flex flex-col flex-1 min-w-0 overflow-hidden relative z-10">
-            <div className="mb-2">
+            <div className="mb-2 flex items-center gap-1.5">
               <span className="bg-[#F6CF80] text-black text-[9px] font-black px-2 py-0.5 rounded-sm uppercase tracking-wider">
-                Jadwal Tayang
+                {a.released ? 'Sudah Rilis' : 'Jadwal Tayang'}
               </span>
+              {a.episode && (
+                <span className="bg-white/10 text-white/70 text-[9px] font-black px-2 py-0.5 rounded-sm uppercase tracking-wider">
+                  Ep {a.episode}
+                </span>
+              )}
             </div>
             <h3 className="font-bold text-sm md:text-base text-white line-clamp-2 mb-2 group-hover/card:text-[#F6CF80] transition-colors">
               {a.title}
             </h3>
-            {/* Field tambahan tidak tersedia di API /schedule */}
           </div>
         </div>
       </div>
@@ -133,8 +136,12 @@ const Schedule = () => {
             schData[item.day.toUpperCase()] = (item.animeList || []).map(
               (a) => ({
                 id: a.link,
+                url: a.link,
                 title: a.anime_name,
                 image_poster: a.cover,
+                time: a.time,
+                episode: a.episode,
+                released: a.released,
               })
             );
           });
